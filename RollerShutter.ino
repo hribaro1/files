@@ -16,6 +16,11 @@ PubSubClient client(ethClient);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
+unsigned long lastRelayD0Time = 0;
+unsigned long lastRelayD1Time = 0;
+unsigned long Roller_1_Full_Up_Time = 0;
+unsigned long Roller_1_Full_Down_Time = 0;
+unsigned long relayDelay = 20000;
 int initalise = 0;
 
 
@@ -23,11 +28,11 @@ int initalise = 0;
 #define shutter1_down_pin CONTROLLINO_D1
 
 // Roller shutter states
-#define shutter1_idle 0
-#define shutter1_going_up 1
-#define shutter1_going_down 2
+#define SHUTTER_IDLE 0
+#define SHUTTER_GOING_UP 1
+#define SHUTTER_GOING_DOWN 2
 
-int shutter1State = shutter1_idle;
+int shutterState = SHUTTER_IDLE;
 
 void setup() {
   Serial.begin(115200);
@@ -63,7 +68,7 @@ void callback(char* topic, byte* message, unsigned int length) {
 
   // Feel free to add more if statements to control more GPIOs with MQTT
 
-  // If a message is received on the topic shutter1, you check if the message is either "up" or "down". 
+  // If a message is received on the topic esp32/output, you check if the message is either "on" or "off". 
   // Changes the output state according to the message
   if (String(topic) == "shutter1") {
     Serial.print("shutter1 ");
