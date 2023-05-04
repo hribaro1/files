@@ -2,54 +2,45 @@
 #include <Controllino.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
+#include "Shutter.h"
+
+
+#define pinUp CONTROLLINO_D0
+#define pinDown CONTROLLINO_D1
+
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 byte ip[] = {192, 168, 1, 198};  // <- change to match your network
 
-int inputState = 0; 
 const char* mqtt_server = "46.101.198.211";
-
 char Controllino_RTC_init();
+
 EthernetClient ethClient;
 PubSubClient client(ethClient);
-
-long lastMsg = 0;
-char msg[50];
-int value = 0;
-unsigned long lastRelayD0Time = 0;
-unsigned long lastRelayD1Time = 0;
-unsigned long Roller_1_Full_Up_Time = 0;
-unsigned long Roller_1_Full_Down_Time = 0;
-unsigned long relayDelay = 20000;
-int initalise = 0;
-
-
-#define shutter1_up_pin CONTROLLINO_D0
-#define shutter1_down_pin CONTROLLINO_D1
+Shutter rolo1(pinUp, pinDown);
 
 // Roller shutter states
-#define SHUTTER_IDLE 0
-#define SHUTTER_GOING_UP 1
-#define SHUTTER_GOING_DOWN 2
-
-int shutterState = SHUTTER_IDLE;
 
 void setup() {
   Serial.begin(115200);
-
   Serial.println("Starting bairCon123456");
+  
+  Ethernet.begin(mac,ip);
   Serial.println(Ethernet.localIP());
-
+  
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
-  // Set relay control pins as outputs
-  pinMode(shutter1_up_pin, OUTPUT);
-  pinMode(shutter1_down_pin, OUTPUT);
+  Serial.println("After ethernet");
+
+  rolo1.init();
+
+  //pinMode(shutter1_up_pin, OUTPUT);
+  //pinMode(shutter1_down_pin, OUTPUT);
 
   // Initialize relay control pins to LOW
-  digitalWrite(shutter1_up_pin, LOW);
-  digitalWrite(shutter1_down_pin, LOW);
+  //digitalWrite(shutter1_up_pin, LOW);
+  //digitalWrite(shutter1_down_pin, LOW);
 }
 
 
@@ -70,22 +61,25 @@ void callback(char* topic, byte* message, unsigned int length) {
 
   // If a message is received on the topic esp32/output, you check if the message is either "on" or "off". 
   // Changes the output state according to the message
-  if (String(topic) == "shutter1") {
-    Serial.print("shutter1 ");
+
+  if (String(topic) == "rolo1") {
+    Serial.print("rolo1");
     if(messageTemp == "up"){
       Serial.println("up");
-      digitalWrite(shutter1_up_pin LOW);
-      delay(100); //small delay to ensure not both outputs are high at the same time     
-      digitalWrite(shutter1_down_pin, HIGH);
+      rolo1.up();
     }
     else if(messageTemp == "down"){
       Serial.println("down");
-      digitalWrite(shutter1_up_pin, LOW);
-      delay(100);      
-      digitalWrite(shutter1_down_pin, HIGH);
+      rolo1.down();
+
+    }
+    else if(messageTemp == "stop"){
+      Serial.println("stop");
+      rolo1.stop();
     }
   }
-}
+
+  }
 
 
 
@@ -97,7 +91,7 @@ void reconnect() {
     if (client.connect("Controllino")) {
       Serial.println("connected");
       // Subscribe
-      client.subscribe("shutter1");
+      client.subscribe("rolo1");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
