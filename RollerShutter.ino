@@ -5,8 +5,11 @@
 #include "Shutter.h"
 
 
-#define pinUp CONTROLLINO_D0
-#define pinDown CONTROLLINO_D1
+#define pinUp CONTROLLINO_R0
+#define pinDown CONTROLLINO_R1
+#define pinUpInput CONTROLLINO_A0
+#define pinDownInput CONTROLLINO_A1
+
 
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
@@ -15,11 +18,28 @@ byte ip[] = {192, 168, 1, 198};  // <- change to match your network
 const char* mqtt_server = "46.101.198.211";
 char Controllino_RTC_init();
 
+int goingUp=0;
+int goingDown=0;
+int buttonStateUp = 0;         // Variable to store the current button state
+int lastButtonStateUp = 0;     // Variable to store the last button state
+int buttonStateDown = 0;         // Variable to store the current button state
+int lastButtonStateDown = 0;     // Variable to store the last button state
+int calibrationMode = 0;        //Variable to know wheather calibrationMode is active
+int calibrated = 0;
+
+const unsigned long timeLimit = 10000; // Time limit in milliseconds (10 seconds)
+unsigned long startTime; // Variable to store the start time
+unsigned long startTimeCalibrationUp;
+unsigned long startTimeCalibrationDown;
+unsigned long calibratedTimeUp;
+unsigned long calibratedTimeDown;
+int setPosition = 0;
+
 EthernetClient ethClient;
 PubSubClient client(ethClient);
+
 Shutter rolo1(pinUp, pinDown);
 
-// Roller shutter states
 
 void setup() {
   Serial.begin(115200);
@@ -35,12 +55,10 @@ void setup() {
 
   rolo1.init();
 
-  //pinMode(shutter1_up_pin, OUTPUT);
-  //pinMode(shutter1_down_pin, OUTPUT);
+  pinMode(pinUpInput, INPUT);
+  pinMode(pinDownInput, INPUT);
 
-  // Initialize relay control pins to LOW
-  //digitalWrite(shutter1_up_pin, LOW);
-  //digitalWrite(shutter1_down_pin, LOW);
+
 }
 
 
@@ -67,16 +85,32 @@ void callback(char* topic, byte* message, unsigned int length) {
     if(messageTemp == "up"){
       Serial.println("up");
       rolo1.up();
+      goingDown=0;
+      goingUp=1;
+
     }
     else if(messageTemp == "down"){
       Serial.println("down");
       rolo1.down();
+      goingDown=1;
+      goingUp=0;
+      
 
     }
     else if(messageTemp == "stop"){
       Serial.println("stop");
       rolo1.stop();
+      goingDown=0;
+      goingUp=0;      
     }
+    
+    else if(messageTemp == "50"){
+      Serial.println("setPosition 50");
+      rolo1.stop();
+      goingDown=0;
+      goingUp=0;      
+    }
+    
   }
 
   }
@@ -104,12 +138,109 @@ void reconnect() {
 
 // the loop function runs over and over again forever
 void loop() {
-
-
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
+
+ if (calibrated) {
+
+   //up, down, stop, setPosition
+   //can enter calibrationMode
+   
+ } else {
+  
+   // if not calibrated
+   //up, down, stop
+   //can enter calibrationMode
+
+  if (calibrationMode == 1) {           //2nd part of calibration mode registering times to go up and down
+     buttonStateDown= digitalRead(pinDownInput);
+    if (lastButtonStateDown == LOW && buttonStateDown == HIGH) {
+      Serial.println("pinDownInput je HIGH from LOW to HIGH - recording calibratedTimeUp, moving down");
+      if (!goingDown) {
+        calibratedTimeUp = millis() - startTimeCalibrationUp;
+        Serial.println("Calibrated time for shutter to go up: ");
+        Serial.println(calibratedTimeUp);
+        rolo1.down();
+        goingUp=0;
+        goingDown=1;
+        startTimeCalibrationDown = millis();
+      } else {
+        calibratedTimeDown = millis() - startTimeCalibrationDown;        
+        rolo1.stop();
+        goingDown=0;
+        goingUp=0;  
+        Serial.println("stoped goingDown and calibration");
+        Serial.println("Calibrated time for shutter to go down: ");
+        Serial.println(calibratedTimeDown);        
+        delay(10);  //short delay, just to avoid double triggering of if clause      
+        calibrationMode = 0;
+        calibrated = 1;
+        startTime = millis();  //to reset startTime for entering calibrationmode
+      } 
+   }
+        lastButtonStateDown = buttonStateDown;   
+
+
+ } else {
+
+//start and stop going up with manual switch
+  buttonStateUp = digitalRead(pinUpInput);
+  if (lastButtonStateUp == LOW && buttonStateUp == HIGH) {
+      Serial.println("pinUpInput je HIGH from LOW to HIGH");
+      if (!goingUp) {
+        rolo1.up();
+        goingDown=0;
+        goingUp=1;
+        Serial.println("starting goingUp");
+      } else { 
+        rolo1.stop();
+        goingDown=0;
+        goingUp=0;  
+        Serial.println("stop goingUp");
+        delay(10);  //short delay, just to avoid double triggering of if clause
+      }
+   }
+  lastButtonStateUp = buttonStateUp; 
+
+// start and stop going down with manual switch
+  buttonStateDown= digitalRead(pinDownInput);
+  if (lastButtonStateDown == LOW && buttonStateDown == HIGH) {
+      Serial.println("pinDownInput je HIGH from LOW to HIGH");
+      if (!goingDown) {
+        rolo1.down();
+        goingDown=1;
+        goingUp=0;
+        Serial.println("starting goingDown");
+      } else { 
+        rolo1.stop();
+        goingDown=0;
+        goingUp=0;  
+        Serial.println("stop goingDown");
+        delay(10);  //short delay, just to avoid double triggering of if clause
+      }
+       startTime = millis(); // Record the start time of press
+   }
+
+     lastButtonStateDown = buttonStateDown;   
+   
+  //if we hold button down for more than 10s, we enter calibration mode
+   if (buttonStateDown == HIGH) {   
+       if ((millis()-startTime) >= timeLimit) {
+         Serial.println("Entered calibration mode"); 
+         calibrated = 0;
+         calibrationMode = 1;
+         rolo1.up();
+         goingUp=1;
+         goingDown=0;
+         startTimeCalibrationUp=millis();
+                  
+       } 
+    }
+  }
+
+ }
 
 }

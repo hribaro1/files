@@ -8,6 +8,7 @@ class Shutter {
   private:
     byte _pinUp;
     byte _pinDown;
+
     
   public:
     // Setup pin Shutter and call init()
