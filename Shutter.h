@@ -13,9 +13,8 @@ class Shutter {
     
   public:
     // Setup pin Shutter and call init()
-    Shutter(byte pinUp, byte pinDown, newPosition);
+    Shutter(byte pinUp, byte pinDown, int newPosition);
 
-    
     void init();
     
     void setPosition(newPosition);
