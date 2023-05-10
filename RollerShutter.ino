@@ -34,6 +34,7 @@ unsigned long startTimeCalibrationDown;
 unsigned long calibratedTimeUp;
 unsigned long calibratedTimeDown;
 int setPosition = 0;
+int currentPosition = 0;
 
 EthernetClient ethClient;
 PubSubClient client(ethClient);
@@ -104,12 +105,11 @@ void callback(char* topic, byte* message, unsigned int length) {
       goingUp=0;      
     }
     
-    else if(messageTemp == "50"){
-      Serial.println("setPosition 50");
-      rolo1.stop();
-      goingDown=0;
-      goingUp=0;      
-    }
+    else if((messageTemp !== "up") && (messageTemp !== "down") && (messageTemp !== "stop")){
+      Serial.println(messageTemp);
+      rolo1.setPosition(messageTemp.toInt(), currentPosition, calibratedTimeUp, calibratedTimeDown);
+      currentPosition = messageTemp.toInt();  
+     }
     
   }
 
@@ -145,7 +145,11 @@ void loop() {
 
 
  if (calibrated) {
-
+     if (calibrationMode == 1) {
+     
+     } else {
+     
+     }
    //up, down, stop, setPosition
    //can enter calibrationMode
    
@@ -178,6 +182,7 @@ void loop() {
         delay(10);  //short delay, just to avoid double triggering of if clause      
         calibrationMode = 0;
         calibrated = 1;
+        currentPosition = 0;
         startTime = millis();  //to reset startTime for entering calibrationmode
       } 
    }
