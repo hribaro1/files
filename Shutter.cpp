@@ -18,7 +18,7 @@ void Shutter::setPosition(newPosition, currentPosition, calibratedTimeUp, calibr
   if (newPosition >=  currentPosition) {   
    _rollTime = calibratedTimeUp*(newPosition - currentPosition)/100;
    _rollStartTime = millis();
-   if ((millis() - _rollStartTime) <= _rollTimeUp) {
+   if ((millis() - _rollStartTime) <= _rollTime) {
      up();
    } else {
      stop()
@@ -27,7 +27,7 @@ void Shutter::setPosition(newPosition, currentPosition, calibratedTimeUp, calibr
  } else {
    _rollTime = calibratedTimeDown*(currentPosition - newPosition)/100;
    _rollStartTime = millis();
-   if ((millis() - _rollStartTime)<=_rollTime) {
+   if ((millis() - _rollStartTime) <= _rollTime) {
      down();
    } else {
      stop();
