@@ -18,7 +18,7 @@ class Shutter {
 
     void init();
     
-    void setPosition(int newPosition);
+    void setPosition(int newPosition, int currentPosition, int calibratedTimeUp, int calibratedTimeDown);
     // Move shutter Up
     void up();
     // Move Shutter down
