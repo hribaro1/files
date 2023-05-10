@@ -14,19 +14,20 @@ void Shutter::init() {
 
 
 void Shutter::setPosition(newPosition, currentPosition, calibratedTimeUp, calibratedTimeDown) {
- if (newPosition >=  currentPosition) {   
-   rollTimeUp = calibratedTimeUp*(newPosition - currentPosition)/100;
-   rollStartTime= milldown();
-   if ((millis()-rollStartTime)<=rollTimeUp) {
+  
+  if (newPosition >=  currentPosition) {   
+   _rollTime = calibratedTimeUp*(newPosition - currentPosition)/100;
+   _rollStartTime = millis();
+   if ((millis() - _rollStartTime) <= _rollTimeUp) {
      up();
    } else {
      stop()
    }
        
  } else {
-   rollTimeDown = calibratedTimeDown*(currentPosition - newPosition)/100;
-   rollStartTime= millis();
-   if ((millis()-rollStartTime)<=rollTimeDown) {
+   _rollTime = calibratedTimeDown*(currentPosition - newPosition)/100;
+   _rollStartTime = millis();
+   if ((millis() - _rollStartTime)<=_rollTime) {
      down();
    } else {
      stop();
