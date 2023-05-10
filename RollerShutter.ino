@@ -105,7 +105,7 @@ void callback(char* topic, byte* message, unsigned int length) {
       goingUp=0;      
     }
     
-    else if((messageTemp !== "up") && (messageTemp !== "down") && (messageTemp !== "stop")){
+    else if((messageTemp != "up") && (messageTemp != "down") && (messageTemp != "stop")){
       Serial.println(messageTemp);
       rolo1.setPosition(messageTemp.toInt(), currentPosition, calibratedTimeUp, calibratedTimeDown);
       currentPosition = messageTemp.toInt();  
