@@ -1,11 +1,13 @@
 #include "Shutter.h"
 #include "Arduino.h"
 
-Shutter::Shutter(byte pinUp, byte pinDown, int newPosition, int currentPosition) {
+Shutter::Shutter(byte pinUp, byte pinDown, int newPosition, int currentPosition, int calibratedTimeUp, int calibratedTimeDown) {
   _pinUp = pinUp;
   _pinDown = pinDown;
   _newPosition = newPosition;
   _currentPosition = currentPosition;
+  _calibratedTimeUp = calibratedTimeUp;
+  _calibratedTimeDown = calibratedTimeDown; 
   init();
 }
 void Shutter::init() {
@@ -15,7 +17,7 @@ void Shutter::init() {
 }
 
 
-void Shutter::setPosition(newPosition, currentPosition) {
+void Shutter::setPosition(newPosition, currentPosition, calibratedTimeUp, calibratedTimeDown) {
  if (newPosition >=  currentPosition) {   
    rollTimeUp = calibratedTimeUp*(newPosition - currentPosition)/100;
    rollStartTime= milldown();
