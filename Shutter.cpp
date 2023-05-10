@@ -1,13 +1,9 @@
 #include "Shutter.h"
 #include "Arduino.h"
 
-Shutter::Shutter(byte pinUp, byte pinDown, int newPosition, int currentPosition, int calibratedTimeUp, int calibratedTimeDown) {
+Shutter::Shutter(byte pinUp, byte pinDown) {
   _pinUp = pinUp;
   _pinDown = pinDown;
-  _newPosition = newPosition;
-  _currentPosition = currentPosition;
-  _calibratedTimeUp = calibratedTimeUp;
-  _calibratedTimeDown = calibratedTimeDown; 
   init();
 }
 void Shutter::init() {
