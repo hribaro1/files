@@ -8,8 +8,7 @@ class Shutter {
   private:
     byte _pinUp;
     byte _pinDown;
-    unsigned long _rollTime;
-    unsigned long _rollStartTime;
+
 
     
   public:
@@ -18,7 +17,6 @@ class Shutter {
 
     void init();
     
-    void setPosition(int newPosition, int currentPosition, int calibratedTimeUp, int calibratedTimeDown);
     // Move shutter Up
     void up();
     // Move Shutter down

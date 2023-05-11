@@ -13,28 +13,6 @@ void Shutter::init() {
 }
 
 
-void Shutter::setPosition(newPosition, currentPosition, calibratedTimeUp, calibratedTimeDown) {
-  
-  if (newPosition >=  currentPosition) {   
-   _rollTime = calibratedTimeUp*(newPosition - currentPosition)/100;
-   _rollStartTime = millis();
-   if ((millis() - _rollStartTime) <= _rollTime) {
-     up();
-   } else {
-     stop()
-   }
-       
- } else {
-   _rollTime = calibratedTimeDown*(currentPosition - newPosition)/100;
-   _rollStartTime = millis();
-   if ((millis() - _rollStartTime) <= _rollTime) {
-     down();
-   } else {
-     stop();
-   }
- }
-}
-
 void Shutter::up() {
   digitalWrite(_pinDown, LOW);
   delay(100);
