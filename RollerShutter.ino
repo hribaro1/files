@@ -41,102 +41,67 @@ int newPosition = 0;
 
 EthernetClient ethClient;
 PubSubClient client(ethClient);
-
 Shutter rolo1(pinUp, pinDown);
-
 
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting bairCon123456");
-
   Ethernet.begin(mac, ip);
   Serial.println(Ethernet.localIP());
-
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-
   Serial.println("After ethernet");
-
   rolo1.init();
-
   pinMode(pinUpInput, INPUT);
   pinMode(pinDownInput, INPUT);
-
-
 }
 
-
-
 void callback(char* topic, byte* message, unsigned int length) {
-  Serial.print("Message arrived on topic: ");
-  Serial.print(topic);
-  Serial.print(". Message: ");
+  Serial.print("Message arrived on topic: "); Serial.print(topic); Serial.print(". Message: ");
   String messageTemp;
-
   for (int i = 0; i < length; i++) {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
   Serial.println();
-
   // Feel free to add more if statements to control more GPIOs with MQTT
-
-  // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
-  // Changes the output state according to the message
-
   if (String(topic) == "rolo1") {
     Serial.print("rolo1");
     if (messageTemp == "up") {
       Serial.println("up");
       rolo1.up();
-      goingDown = 0;
-      goingUp = 1;
-
+      goingDown = 0; goingUp = 1;
     }
     else if (messageTemp == "down") {
       Serial.println("down");
       rolo1.down();
-      goingDown = 1;
-      goingUp = 0;
-
-
+      goingDown = 1; goingUp = 0;
     }
     else if (messageTemp == "stop") {
       Serial.println("stop");
       rolo1.stop();
-      goingDown = 0;
-      goingUp = 0;
+      goingDown = 0; goingUp = 0;
     }
-
     else if ((messageTemp != "up") && (messageTemp != "down") && (messageTemp != "stop")) {
       newPosition = messageTemp.toInt();
       Serial.println("Nastavitev setPosition: ");
-      Serial.println(newPosition);
-      Serial.println(currentPosition);
-      Serial.println(calibratedTimeUp);
-      Serial.println(calibratedTimeDown);
+      Serial.println(newPosition); Serial.println(currentPosition); Serial.println(calibratedTimeUp); Serial.println(calibratedTimeDown);
 
       if (newPosition > currentPosition) {
         rollTime = calibratedTimeUp * (newPosition - currentPosition) / 100;
         rollStartTime = millis();
-        Serial.print("rollTime: ");
-        Serial.println(rollTime);
-        Serial.print("rollStartTime: ");
-        Serial.println(rollStartTime);
+        Serial.print("rollTime: "); Serial.println(rollTime);
+        Serial.print("rollStartTime: "); Serial.println(rollStartTime);
         rolo1.up();
       } else {
         rollTime = calibratedTimeDown * (currentPosition - newPosition) / 100;
         rollStartTime = millis();
-        Serial.print("rollTime: ");
-        Serial.println(rollTime);
-        Serial.print("rollStartTime: ");
-        Serial.println(rollStartTime);
+        Serial.print("rollTime: "); Serial.println(rollTime);
+        Serial.print("rollStartTime: "); Serial.println(rollStartTime);
         rolo1.down();
       }
     }
-
   }
-
 }
 
 
@@ -145,16 +110,14 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
     if (client.connect("Controllino")) {
       Serial.println("connected");
-      // Subscribe
       client.subscribe("rolo1");
+      client.subscribe("rolo2");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
       delay(5000);
     }
   }
@@ -162,17 +125,12 @@ void reconnect() {
 
 // the loop function runs over and over again forever
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
+  if (!client.connected()) {reconnect();}
   client.loop();
-
 
   if (calibrated) {
     if (calibrationMode == 1) {
-
     } else {
-
       if (newPosition != currentPosition) {
         //Serial.print("rolling: ");
         if ((millis() - rollStartTime) > rollTime) {
@@ -182,8 +140,11 @@ void loop() {
           Serial.println(currentPosition);
         }
        } 
+      
     }
+    
     //up, down, stop, setPosition
+    
     //can enter calibrationMode
 
   } else {
@@ -220,8 +181,6 @@ void loop() {
         }
       }
       lastButtonStateDown = buttonStateDown;
-
-
     } else {
 
       //start and stop going up with manual switch
@@ -230,13 +189,11 @@ void loop() {
         Serial.println("pinUpInput je HIGH from LOW to HIGH");
         if (!goingUp) {
           rolo1.up();
-          goingDown = 0;
-          goingUp = 1;
+          goingDown = 0; goingUp = 1;
           Serial.println("starting goingUp");
         } else {
           rolo1.stop();
-          goingDown = 0;
-          goingUp = 0;
+          goingDown = 0; goingUp = 0;
           Serial.println("stop goingUp");
           delay(10);  //short delay, just to avoid double triggering of if clause
         }
@@ -249,36 +206,29 @@ void loop() {
         Serial.println("pinDownInput je HIGH from LOW to HIGH");
         if (!goingDown) {
           rolo1.down();
-          goingDown = 1;
-          goingUp = 0;
+          goingDown = 1; goingUp = 0;
           Serial.println("starting goingDown");
         } else {
           rolo1.stop();
-          goingDown = 0;
-          goingUp = 0;
+          goingDown = 0; goingUp = 0;
           Serial.println("stop goingDown");
           delay(10);  //short delay, just to avoid double triggering of if clause
         }
         startTime = millis(); // Record the start time of press
       }
-
       lastButtonStateDown = buttonStateDown;
 
       //if we hold button down for more than 10s, we enter calibration mode
       if (buttonStateDown == HIGH) {
         if ((millis() - startTime) >= timeLimit) {
           Serial.println("Entered calibration mode");
-          calibrated = 0;
-          calibrationMode = 1;
+          calibrated = 0; calibrationMode = 1;
           rolo1.up();
-          goingUp = 1;
-          goingDown = 0;
+          goingUp = 1; goingDown = 0;
           startTimeCalibrationUp = millis();
 
         }
       }
     }
-
   }
-
 }

@@ -11,24 +11,17 @@ void Shutter::init() {
   pinMode(_pinDown, OUTPUT);
   stop();
 }
-
-
 void Shutter::up() {
   digitalWrite(_pinDown, LOW);
   delay(100);
   digitalWrite(_pinUp, HIGH);
- 
-  
 }
 void Shutter::down() {
   digitalWrite(_pinUp, LOW);
   delay(100);
   digitalWrite(_pinDown, HIGH);
-
-
 }
 void Shutter::stop() {
   digitalWrite(_pinUp, LOW);
   digitalWrite(_pinDown, LOW);
-
 }
